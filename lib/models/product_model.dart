@@ -1,0 +1,45 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+/// Firestore collections that hold products. Each collection is one category
+/// in the customer app. Categories are now read live from the "categories"
+/// collection, so this list is no longer used.
+const kProductCategories = ['Rice', 'Snacks'];
+
+const _coreKeys = {'text', 'price', 'image', 'description'};
+const _metaKeys = {'createdAt', 'updatedAt'};
+
+class ProductModel {
+  const ProductModel({
+    required this.id,
+    required this.category,
+    required this.data,
+  });
+
+  final String id;
+  final String category;
+
+  /// The complete Firestore document.
+  final Map<String, dynamic> data;
+
+  String get name => (data['text'] ?? '').toString();
+  dynamic get price => data['price'];
+  String get priceText => price == null ? '' : price.toString();
+  String get image => (data['image'] ?? '').toString();
+  String get description => (data['description'] ?? '').toString();
+
+  /// Other simple fields (text or numbers) that the form can edit.
+  Map<String, dynamic> get extraFields => {
+    for (final e in data.entries)
+      if (!_coreKeys.contains(e.key) &&
+          !_metaKeys.contains(e.key) &&
+          (e.value is String || e.value is num))
+        e.key: e.value,
+  };
+
+  factory ProductModel.fromDoc(
+      String category,
+      QueryDocumentSnapshot<Map<String, dynamic>> doc,
+      ) {
+    return ProductModel(id: doc.id, category: category, data: doc.data());
+  }
+}
