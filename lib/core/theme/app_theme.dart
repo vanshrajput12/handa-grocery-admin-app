@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Same palette as the Handa Grocery customer app.
@@ -89,6 +90,10 @@ class AppTheme {
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.deepGreen,
         foregroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Colors.white),
+        actionsIconTheme: const IconThemeData(color: Colors.white),
+        systemOverlayStyle: SystemUiOverlayStyle.light,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
@@ -201,7 +206,10 @@ class AppTheme {
         unselectedLabelTextStyle:
         GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
       ),
-      drawerTheme: const DrawerThemeData(backgroundColor: AppColors.deepGreen),
+      drawerTheme: const DrawerThemeData(
+        backgroundColor: AppColors.deepGreen,
+        surfaceTintColor: Colors.transparent,
+      ),
       listTileTheme: const ListTileThemeData(
         iconColor: AppColors.green,
         selectedColor: AppColors.deepGreen,
