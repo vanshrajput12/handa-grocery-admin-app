@@ -31,9 +31,27 @@ class _ProductsPageState extends State<ProductsPage> {
   Stream<QuerySnapshot<Map<String, dynamic>>>? _productsStream;
   String _query = '';
 
+  /// The rules only allow reading/writing a product collection if
+  /// `categories/{name}` exists, so make sure the default ones are there.
+  Future<void> _seedDefaultCategories() async {
+    for (final c in _defaultCategories) {
+      try {
+        await _db
+            .collection('categories')
+            .doc(c)
+            .set({'name': c}, SetOptions(merge: true));
+      } catch (_) {}
+    }
+    if (mounted) {
+      // re-subscribe: a stream that failed with permission-denied never retries
+      setState(() => _streamCategory = null);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _seedDefaultCategories();
     _categoriesStream = _db.collection('categories').snapshots().map((snap) {
       final names = <String>{..._defaultCategories};
       for (final d in snap.docs) {
@@ -689,6 +707,19 @@ class _ProductFormState extends State<_ProductForm> {
       'updatedAt': FieldValue.serverTimestamp(),
     };
 
+    // The category document must exist BEFORE the product is saved, because
+    // the Firestore rules only allow writes to a product collection whose
+    // name is listed in `categories`. It also makes the category show as a
+    // chip in the admin panel and the customer app.
+    try {
+      await db
+          .collection('categories')
+          .doc(category)
+          .set({'name': category}, SetOptions(merge: true));
+    } catch (_) {
+      // If this fails the product write below fails too and shows the error.
+    }
+
     try {
       if (_isEdit) {
         await widget.doc!.reference.update(data);
@@ -708,14 +739,6 @@ class _ProductFormState extends State<_ProductForm> {
       );
       return;
     }
-
-    // Makes the category appear as a chip (admin + customer app).
-    try {
-      await db
-          .collection('categories')
-          .doc(category)
-          .set({'name': category}, SetOptions(merge: true));
-    } catch (_) {}
 
     if (!mounted) return;
     Navigator.pop(context, category);
