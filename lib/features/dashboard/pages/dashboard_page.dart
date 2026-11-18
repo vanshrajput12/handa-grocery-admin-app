@@ -331,58 +331,67 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-// ───────────────────────── Overview cards ─────────────────────────
+// ───────────────────────── Overview grid (tap to open) ─────────────────────────
 
 class _OverviewGrid extends StatelessWidget {
   const _OverviewGrid();
 
+  static const _subtitles = <String, String>{
+    'orders': 'View and update customer orders',
+    'products': 'Add, edit and remove items',
+    'categories': 'Organize grocery products',
+    'inventory': 'Track stock levels',
+    'customers': 'See your customers',
+    'delivery partners': 'Manage delivery staff',
+    'reports': 'Sales and performance',
+    'settings': 'Store preferences',
+  };
+
+  static const _palettes = <List<Color>>[
+    [AppColors.green, Color(0xFF3DB56E)],
+    [AppColors.deepGreen, AppColors.green],
+    [Color(0xFF2E9E8F), Color(0xFF45C0A8)],
+    [AppColors.orange, Color(0xFFFFB347)],
+  ];
+
   @override
   Widget build(BuildContext context) {
+    // Built from the sidebar items, so every card opens a real screen and
+    // new sections added to adminNavItems show up here automatically.
+    final items = adminNavItems
+        .where((n) => n.label.toLowerCase() != 'dashboard')
+        .toList();
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final columns = constraints.maxWidth >= 850
             ? 4
-            : constraints.maxWidth >= 380
+            : constraints.maxWidth >= 300
             ? 2
             : 1;
-        final cardWidth =
-            (constraints.maxWidth - (columns - 1) * 14) / columns;
 
-        Widget card(_OverviewCard c) => SizedBox(width: cardWidth, child: c);
-
-        return Wrap(
-          spacing: 14,
-          runSpacing: 14,
-          children: [
-            card(const _OverviewCard(
-              title: 'Products',
-              value: 'Manage',
-              icon: Icons.inventory_2_outlined,
-              colors: [AppColors.green, Color(0xFF3DB56E)],
-              subtitle: 'Add, edit and remove items',
-            )),
-            card(const _OverviewCard(
-              title: 'Orders',
-              value: 'Review',
-              icon: Icons.receipt_long_outlined,
-              colors: [AppColors.deepGreen, AppColors.green],
-              subtitle: 'View customer orders',
-            )),
-            card(const _OverviewCard(
-              title: 'Categories',
-              value: 'Browse',
-              icon: Icons.category_outlined,
-              colors: [Color(0xFF2E9E8F), Color(0xFF45C0A8)],
-              subtitle: 'Organize grocery products',
-            )),
-            card(const _OverviewCard(
-              title: 'Store',
-              value: 'Active',
-              icon: Icons.store_outlined,
-              colors: [AppColors.orange, Color(0xFFFFB347)],
-              subtitle: 'Handa Grocery admin',
-            )),
-          ],
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: 14,
+            mainAxisSpacing: 14,
+            mainAxisExtent: 156,
+          ),
+          itemCount: items.length,
+          itemBuilder: (context, i) {
+            final item = items[i];
+            return _OverviewCard(
+              label: item.label,
+              icon: item.icon,
+              subtitle: _subtitles[item.label.toLowerCase()] ??
+                  'Open ${item.label}',
+              colors: _palettes[i % _palettes.length],
+              onTap: () => context.go(item.path),
+            );
+          },
         );
       },
     );
@@ -391,84 +400,106 @@ class _OverviewGrid extends StatelessWidget {
 
 class _OverviewCard extends StatelessWidget {
   const _OverviewCard({
-    required this.title,
-    required this.value,
+    required this.label,
     required this.icon,
     required this.colors,
     required this.subtitle,
+    required this.onTap,
   });
 
-  final String title;
-  final String value;
+  final String label;
   final IconData icon;
   final List<Color> colors;
   final String subtitle;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: colors.first.withValues(alpha: 0.10),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 46,
-            width: 46,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: colors,
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: colors.first.withValues(alpha: 0.10),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
               ),
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: colors.first.withValues(alpha: 0.35),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    height: 46,
+                    width: 46,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: colors,
+                      ),
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colors.first.withValues(alpha: 0.35),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Icon(icon, color: Colors.white, size: 24),
+                  ),
+                  const Spacer(),
+                  Container(
+                    height: 32,
+                    width: 32,
+                    decoration: const BoxDecoration(
+                      color: AppColors.softGreen,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.north_east_rounded,
+                      size: 16,
+                      color: AppColors.green,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.darkText,
                 ),
-              ],
-            ),
-            child: Icon(icon, color: Colors.white, size: 24),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.poppins(
+                  fontSize: 11.5,
+                  height: 1.4,
+                  color: AppColors.mutedText,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 18),
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              fontSize: 12.5,
-              color: AppColors.mutedText,
-            ),
-          ),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: AppColors.darkText,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: GoogleFonts.poppins(
-              fontSize: 11.5,
-              height: 1.4,
-              color: AppColors.mutedText,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
